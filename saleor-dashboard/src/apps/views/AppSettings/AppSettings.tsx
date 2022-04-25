@@ -1,0 +1,48 @@
+import { appMessages } from "@saleor/apps/messages";
+import NotFoundPage from "@saleor/components/NotFoundPage";
+import { useAppQuery } from "@saleor/graphql";
+import useNavigator from "@saleor/hooks/useNavigator";
+import useNotifier from "@saleor/hooks/useNotifier";
+import React from "react";
+import { useIntl } from "react-intl";
+
+import AppPage from "../../components/AppPage";
+import { appDetailsUrl, appsListPath } from "../../urls";
+
+interface AppSettingsProps {
+  id: string;
+}
+
+export const AppSettings: React.FC<AppSettingsProps> = ({ id }) => {
+  const { data } = useAppQuery({
+    displayLoader: true,
+    variables: { id }
+  });
+
+  const appExists = data?.app !== null;
+
+  const navigate = useNavigator();
+  const notify = useNotifier();
+  const intl = useIntl();
+
+  if (!appExists) {
+    return <NotFoundPage onBack={() => navigate(appsListPath)} />;
+  }
+
+  return (
+    <AppPage
+      data={data?.app}
+      url={data?.app.configurationUrl}
+      navigateToAbout={() => navigate(appDetailsUrl(id))}
+      onBack={() => navigate(appsListPath)}
+      onError={() =>
+        notify({
+          status: "error",
+          text: intl.formatMessage(appMessages.failedToFetchAppSettings)
+        })
+      }
+    />
+  );
+};
+
+export default AppSettings;
